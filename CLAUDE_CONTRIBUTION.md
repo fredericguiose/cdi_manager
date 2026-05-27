@@ -1,0 +1,123 @@
+# CLAUDE_CONTRIBUTION.md
+
+> **Instruction pour toute IA intervenant sur ce projet :**
+> À chaque intervention (création de fichier, modification de logique, ajout de fonctionnalité, correction de bug, refactoring...), tu dois ajouter une entrée dans la section **Journal des contributions** ci-dessous. Format : date ISO, modèle IA, rôle clair, fichiers touchés, description concise de ce qui a été fait et pourquoi.
+
+---
+
+## Architecture du projet
+
+**Nom :** CDI Manager
+**Objectif :** Gérer les emprunts de livres par des élèves du primaire (projet NSI lycée 1ère année).
+**Stack :** Python 3.14, Flask, fichiers CSV comme base de données, frontend HTML statique.
+**Gestionnaire de dépendances :** Poetry
+
+### Structure des dossiers
+
+```
+cdi_manager/
+├── backend/
+│   ├── main.py          # Point d'entrée Flask (vide pour l'instant)
+│   └── utils.py         # Fonctions utilitaires : validation et conversion de types
+├── data/
+│   ├── models.py        # Couche d'accès aux données (CRUD sur CSV) : _create, _update, _delete, _get
+│   ├── schemas.py       # Définition des schémas de données (ELEVES, LIVRES, EMPRUNTS)
+│   ├── eleves.csv       # Données des élèves
+│   ├── livres.csv       # Données des livres
+│   └── emprunts.csv     # Données des emprunts
+├── frontend/
+│   ├── index.html       # Page principale (vide pour l'instant)
+│   └── add_eleve.html   # Page ajout élève (vide pour l'instant)
+├── tests/
+│   ├── test_models.py   # Tests unitaires sur la couche models
+│   └── data/
+│       └── get_eleves.csv  # Données de test pour _get
+├── .env                 # Variables d'environnement (non versionné)
+├── .env.example         # Template des variables d'environnement
+├── OBJECTIF.MD          # Cahier des charges initial
+├── pyproject.toml       # Configuration Poetry + dépendances
+└── poetry.lock          # Lockfile des dépendances
+```
+
+### Schémas de données (`data/schemas.py`)
+
+| Entité   | Champs                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ELEVES   | `id` (int), `first_name` (str), `last_name` (str), `age` (int), `grade` (str), `image_url` (str)                                                 |
+| LIVRES   | `ibm` (str), `title` (str), `author` (str), `year_published` (int), `image_url` (str), `description` (str), `category_id` (int), `status` (bool) |
+| EMPRUNTS | `id` (int), `eleve_id` (int), `book_id` (int), `status` (bool)                                                                                   |
+
+### Règles métier (OBJECTIF.MD)
+
+- Un élève ne peut emprunter qu'**un seul livre** à la fois.
+- Les emprunts sont tracés avec un champ `est_rendu` (mappé sur `status`).
+
+### Couche `data/models.py`
+
+Fonctions CRUD génériques opérant sur des fichiers CSV via `csv.DictReader` / `csv.DictWriter` :
+
+- `_get(model, structure, query, primary_key)` — lecture filtrée, implémentée
+- `_create(model, structure)` — squelette déclaré, non implémenté
+- `_update(model, structure, query)` — squelette déclaré, non implémenté
+- `_delete(model, structure, query, all)` — implémentation partielle (logique de filtrage incomplète)
+
+### Couche `backend/utils.py`
+
+- `is_structured(data, structure)` — vérifie qu'un dict correspond à un schéma (clés + types)
+- `convert_to_type(value, expected_type)` — convertit une chaîne CSV en type Python (`int`, `float`, `bool`, `str`)
+- `convert_row_to_type(row, structure)` — applique `convert_to_type` à chaque champ d'une ligne CSV
+
+---
+
+## Journal des contributions
+
+### 2026-05-27 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Analyse du projet et initialisation du fichier de suivi des contributions
+
+**Fichiers créés :**
+
+- `CLAUDE_CONTRIBUTION.md` (ce fichier)
+
+**Description :**
+Première intervention sur le projet. Lecture complète de la codebase pour cartographier l'architecture existante : schémas de données, couche models (CRUD CSV), utilitaires de conversion, tests unitaires, frontend HTML, configuration Poetry. Création de ce fichier de traçabilité à la demande du propriétaire du projet afin que toutes les IA intervenant ultérieurement documentent leurs contributions de manière claire et structurée.
+
+**Aucun code modifié lors de cette intervention.**
+
+---
+
+### 2026-05-27 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Configuration de l'environnement de développement VS Code — indentation Python
+
+**Fichiers modifiés :**
+- `.vscode/settings.json`
+
+**Description :**
+Correction de l'indentation Python forcée à 2 espaces par Prettier. Ajout d'un bloc `[python]` dans les settings VS Code pour surcharger Prettier : `tabSize: 4`, `insertSpaces: true`, et `defaultFormatter` pointant sur `ms-python.python`. Prettier reste actif sur les autres types de fichiers (HTML, JSON, etc.). Conforme à la PEP 8 (4 espaces).
+
+---
+
+### 2026-05-27 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Correction de l'indentation Python via `.editorconfig` et `.prettierignore`
+
+**Fichiers créés :**
+- `.editorconfig`
+- `.prettierignore`
+
+**Description :**
+La correction via `settings.json` était insuffisante : les logs Prettier montraient qu'il cherchait un `.editorconfig` local et n'en trouvait pas (`inferredParser: null` pour Python). Création d'un `.editorconfig` avec indentation 4 espaces pour `*.py` (2 espaces par défaut pour les autres fichiers). Création d'un `.prettierignore` excluant `*.py` car Prettier n'a pas de parser Python natif.
+
+---
+
+### 2026-05-27 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Rédaction du README (FR + EN)
+
+**Fichiers modifiés / créés :**
+- `README.md`
+- `README_EN.md`
+
+**Description :**
+Réécriture du README à la demande de l'auteur. Présentation de l'objectif du projet (gestion d'emprunts NSI Première), de la stack (Flask, HTML/CSS/JS, CSV, Poetry), du périmètre du devoir NSI (`data/`, `cli/`, `tests/`) vs bonus (API + frontend). Ajout des commandes pour lancer les tests, le CLI, l'API et Docker (compose prod/dev). Version anglaise créée en parallèle (`README_EN.md`).
