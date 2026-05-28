@@ -121,3 +121,37 @@ La correction via `settings.json` était insuffisante : les logs Prettier montra
 
 **Description :**
 Réécriture du README à la demande de l'auteur. Présentation de l'objectif du projet (gestion d'emprunts NSI Première), de la stack (Flask, HTML/CSS/JS, CSV, Poetry), du périmètre du devoir NSI (`data/`, `cli/`, `tests/`) vs bonus (API + frontend). Ajout des commandes pour lancer les tests, le CLI, l'API et Docker (compose prod/dev). Version anglaise créée en parallèle (`README_EN.md`).
+
+---
+
+### 2026-05-27 — Claude Haiku 4.5 (Anthropic)
+
+**Rôle :** Modification des fichiers `__main__.py` pour utiliser une lambda
+
+**Fichiers modifiés :**
+- `tests/__main__.py`
+- `tests/api/__main__.py`
+- `tests/cli/__main__.py`
+- `tests/data/__main__.py`
+
+**Description :**
+Remplacement du contenu de tous les fichiers `__main__.py` du dossier `tests`. Utilisation d'une lambda pour encapsuler l'appel à `_run()` avec `pathlib.Path(__file__).parent`. L'import `run` a été renommé en `_run` pour éviter les conflits, et une lambda `run` a été créée pour fournir une interface simple : `run = lambda: _run(pathlib.Path(__file__).parent)`.
+
+---
+
+### 2026-05-27 — Claude Opus 4.7 (Anthropic)
+
+**Rôle :** Correction d'une récursion infinie — propagation du pattern lambda à tous les sous-dossiers de tests
+
+**Fichiers modifiés :**
+- `tests/api/routes/__main__.py`
+- `tests/cli/managers/__main__.py`
+- `tests/cli/managers/books/__main__.py`
+- `tests/cli/managers/loans/__main__.py`
+- `tests/cli/managers/students/__main__.py`
+- `tests/data/books/__main__.py`
+- `tests/data/loans/__main__.py`
+- `tests/data/students/__main__.py`
+
+**Description :**
+Lors de la précédente intervention, seuls les 4 `__main__.py` de premier niveau (`tests/`, `tests/api/`, `tests/cli/`, `tests/data/`) avaient été modifiés. Les 8 `__main__.py` des sous-dossiers (`routes/`, `managers/`, `books/`, `loans/`, `students/`) conservaient l'ancien code `from tests import run; run()`. Quand `tests/__init__.py:run()` les importait et appelait `module.run()`, ces fichiers exécutaient `run()` **sans argument**, ce qui retombait sur la valeur par défaut `target=pathlib.Path(__file__).parent` (pointant vers `tests/`) — provoquant une boucle de récursion infinie (`RecursionError`). Tous les sous-dossiers utilisent désormais le même pattern lambda passant explicitement le chemin courant.
