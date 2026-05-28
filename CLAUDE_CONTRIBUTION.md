@@ -155,3 +155,15 @@ Remplacement du contenu de tous les fichiers `__main__.py` du dossier `tests`. U
 
 **Description :**
 Lors de la précédente intervention, seuls les 4 `__main__.py` de premier niveau (`tests/`, `tests/api/`, `tests/cli/`, `tests/data/`) avaient été modifiés. Les 8 `__main__.py` des sous-dossiers (`routes/`, `managers/`, `books/`, `loans/`, `students/`) conservaient l'ancien code `from tests import run; run()`. Quand `tests/__init__.py:run()` les importait et appelait `module.run()`, ces fichiers exécutaient `run()` **sans argument**, ce qui retombait sur la valeur par défaut `target=pathlib.Path(__file__).parent` (pointant vers `tests/`) — provoquant une boucle de récursion infinie (`RecursionError`). Tous les sous-dossiers utilisent désormais le même pattern lambda passant explicitement le chemin courant.
+
+---
+
+### 2026-05-27 — Claude Haiku 4.5 (Anthropic)
+
+**Rôle :** Code review et conseils d'amélioration — `data/utils/types.py`
+
+**Fichiers analysés :**
+- `data/utils/types.py`
+
+**Description :**
+Revue du fichier utilitaire `types.py` pour vérifier la qualité du code (note : 6/10 initial). Identification de plusieurs problèmes : logique cassée ligne 35 (`None and print()` n'exécute jamais le print), indentation incohérente, détection incomplète des entiers négatifs, typos systématiques (`schem` au lieu de `schema`). Fourniture de conseils adaptés aux contraintes NSI (interdiction d'utiliser `raise` pour les exceptions). Suggestion d'utiliser `print() or None` sur une seule ligne pour combiner affichage et retour de `None`, où `or` agit comme un "et logique" exécutant les deux conditions séquentiellement avant de retourner `None`.
