@@ -1,6 +1,8 @@
 
 TYPES_MAP = (int,float,str,bool)
 
+__all__ = ("match_schema","string_to_type")
+
 def match_schema(schema:dict[str,type],data:dict[str,str]) -> bool:
     """Verify if your schem match with your data
 
