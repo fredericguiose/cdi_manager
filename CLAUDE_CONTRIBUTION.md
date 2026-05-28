@@ -184,6 +184,18 @@ Correction des imports Python qui échouaient avec `python -m tests.data.test_db
 
 ### 2026-05-28 — Claude Sonnet 4.6 (Anthropic)
 
+**Rôle :** Création des fonctions d'affichage de base pour le CLI dans `cli/utils/display.py`
+
+**Fichiers créés :**
+- `cli/utils/display.py`
+
+**Description :**
+Création des fonctions d'affichage CLI sans dépendance externe : `clear()` (efface le terminal via `os.system`), `separator()` (ligne de caractères), `title()` (clear + encadré `===`), `header()` (encadré `---`), `success/error/info()` (messages préfixés), `table()` (tableau avec colonnes alignées automatiquement), `menu()` (affiche un menu numéroté et retourne le choix), `pause()` (attend une touche). Seul `os` de la stdlib est utilisé.
+
+---
+
+### 2026-05-28 — Claude Sonnet 4.6 (Anthropic)
+
 **Rôle :** Ajout de la fonction factory `make_db` dans `data/db.py`
 
 **Fichiers modifiés :**
