@@ -167,3 +167,41 @@ Lors de la précédente intervention, seuls les 4 `__main__.py` de premier nivea
 
 **Description :**
 Revue du fichier utilitaire `types.py` pour vérifier la qualité du code (note : 6/10 initial). Identification de plusieurs problèmes : logique cassée ligne 35 (`None and print()` n'exécute jamais le print), indentation incohérente, détection incomplète des entiers négatifs, typos systématiques (`schem` au lieu de `schema`). Fourniture de conseils adaptés aux contraintes NSI (interdiction d'utiliser `raise` pour les exceptions). Suggestion d'utiliser `print() or None` sur une seule ligne pour combiner affichage et retour de `None`, où `or` agit comme un "et logique" exécutant les deux conditions séquentiellement avant de retourner `None`.
+
+---
+
+### 2026-05-27 — Claude Haiku 4.5 (Anthropic)
+
+**Rôle :** Correction des imports relatifs dans `data/db.py`
+
+**Fichiers modifiés :**
+- `data/db.py`
+
+**Description :**
+Correction des imports Python qui échouaient avec `python -m tests.data.test_db`. Passage des imports absolus (`from utils.types` et `from schemas`) aux imports relatifs (`from .utils.types` et `from .schemas`) pour que le module soit importable peu importe le contexte d'exécution. Les imports relatifs avec `.` indiquent "dans le même package" et fonctionnent correctement avec `-m`.
+
+---
+
+### 2026-05-28 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Ajout de la fonction factory `make_db` dans `data/db.py`
+
+**Fichiers modifiés :**
+- `data/db.py`
+
+**Description :**
+Ajout de `make_db(schema_name, schemas_path)` en bas de `db.py`. Cette factory retourne un tuple `(get, create, delete, update)` dont chaque fonction est liée par closure au `schema_name` et `schemas_path` fournis. Permet de créer une abstraction par schéma en une ligne (`get, create, delete, update = make_db("STUDENTS")`), sans dupliquer de logique. La factory corrige aussi le piège de l'argument mutable par défaut en utilisant `query=None` suivi de `query or {}`.
+
+---
+
+### 2026-05-28 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Correction de 5 bugs critiques dans `data/db.py` et écriture des tests CRUD dans `tests/data/test_db.py`
+
+**Fichiers modifiés :**
+- `data/db.py`
+- `tests/data/test_db.py`
+- `tests/data/_schemas_test_db/students.csv`
+
+**Description :**
+Correction de 5 bugs qui empêchaient toute exécution des fonctions CRUD : (1) `dict.keys()[0]` ne supporte pas l'indexation en Python 3, remplacé par `list(...)[0]` dans `_create` et `_get_with_primary` ; (2) `_get_with_primary` n'avait pas de paramètre `primary_key_value` et utilisait `primary_key[0]`/`primary_key[1]` (indexation de string au lieu d'accès dict) ; (3) `_delete` et `_update` passaient `None` comme query à `_get` au lieu d'utiliser les keyword args ; (4) `_get_with_query` comparait des valeurs typées avec des strings CSV brutes, corrigé avec `str(value)` ; (5) `_entry_exist` n'acceptait pas `schemas_path`. Refactoring du cache : `_cache.pop(schema_name, None)` sur mutation plutôt que mise à jour sélective. Ajout d'un second étudiant dans le CSV de test. Écriture de 12 tests couvrant GET (all, query, primary key), CREATE (un, plusieurs, doublon ignoré), DELETE (match, no match), UPDATE (match, no match) — tous passent.
