@@ -2,7 +2,7 @@ import csv
 import pathlib
 from typing import Any
 from .utils.types import clean_data, match_schema
-from .schemas import SCHEMAS
+from .models import MODELS
 
 _cache = {}
 SCHEMAS_PATH = pathlib.Path.cwd() / "data" / "schemas"
@@ -22,7 +22,7 @@ def _get(schema_name:str, query:dict[str,Any]={}, primary_key_value=None, schema
     Returns:
         list[dict[str,Any]]: The Records that match with query or primary_key
     """
-    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='r') as f:
+    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='r',encoding="utf-8") as f:
         reader = csv.DictReader(f)
         if primary_key_value is not None:
             rows = _get_with_primary(schema_name, reader, primary_key_value)
@@ -56,7 +56,7 @@ def _get_with_primary(schema_name, reader:csv.DictReader, primary_key_value) -> 
     Returns:
         list[dict[str,str]]: The list of string-data match by primary key
     """
-    primary_key = list(SCHEMAS[schema_name].keys())[0]
+    primary_key = list(MODELS[schema_name].keys())[0]
 
     if schema_name not in _cache:
         _cache[schema_name] = {row[primary_key]: row for row in reader}
@@ -65,7 +65,7 @@ def _get_with_primary(schema_name, reader:csv.DictReader, primary_key_value) -> 
 
 
 # Create :
-def _create(schema_name:str, entries:list[dict[str,Any]], schemas_path=SCHEMAS_PATH):
+def _create(schema_name:str, entries:list[dict[str,Any]], schemas_path=SCHEMAS_PATH) -> tuple(list[dict[str, Any]],bool):
     """Create entries in the database.
 
     Args:
@@ -73,19 +73,32 @@ def _create(schema_name:str, entries:list[dict[str,Any]], schemas_path=SCHEMAS_P
         entries (list[dict[str,Any]]): The entries to create
         schemas_path: The schemas path folder. Defaults to SCHEMAS_PATH.
     """
-    primary_key = list(SCHEMAS[schema_name].keys())[0]
-    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='a', newline="") as f:
-        writer = csv.DictWriter(f, SCHEMAS[schema_name])
+    primary_key = list(MODELS[schema_name].keys())[0]
+    error = False
+    success_entries = []
+    first_id = None
+    if MODELS[schema_name][primary_key] == int and not entries[0].get(primary_key):
+        existing = _get(schema_name, schemas_path=schemas_path)
+        first_id = (existing[-1][primary_key] if len(existing) > 0 else 0) + 1
+    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='a', newline="",encoding="utf-8") as f:
+        writer = csv.DictWriter(f, MODELS[schema_name])
+        counter = 0
         for entry in entries:
             if _entry_exist(schema_name, entry, schemas_path):
                 print(f"db._create: Entry {entry} already exists")
+                error = True
                 continue
-            if not match_schema(SCHEMAS[schema_name], entry):
+            entry.update({primary_key: first_id} if MODELS[schema_name][primary_key] == int and not entries[0].get(primary_key) else {}) # The .update use for increment the ID automate if is a int
+            if not match_schema(MODELS[schema_name], entry):
                 print(f"db._create: Entry {entry} does not match schema")
+                error = True
                 continue
             writer.writerow(entry)
             if schema_name in _cache:
                 _cache[schema_name][str(entry[primary_key])] = {k: str(v) for k, v in entry.items()}
+            success_entries.append(entry)
+            counter += 1
+    return success_entries,error
 
 
 def _entry_exist(schema_name:str, entry:dict[str,Any], schemas_path=SCHEMAS_PATH) -> bool:
@@ -98,7 +111,7 @@ def _entry_exist(schema_name:str, entry:dict[str,Any], schemas_path=SCHEMAS_PATH
     Returns:
         bool: True if the entry exists, False otherwise
     """
-    primary_key = list(SCHEMAS[schema_name].keys())[0]
+    primary_key = list(MODELS[schema_name].keys())[0]
     primary_value = entry.get(primary_key)
     if primary_value is None:
         return False
@@ -106,7 +119,7 @@ def _entry_exist(schema_name:str, entry:dict[str,Any], schemas_path=SCHEMAS_PATH
 
 
 # Delete :
-def _delete(schema_name, query: dict[str, Any], schemas_path=SCHEMAS_PATH):
+def _delete(schema_name, query: dict[str, Any], schemas_path=SCHEMAS_PATH) -> list[dict[str, Any]]:
     """Delete records matching the query.
 
     Args:
@@ -118,12 +131,13 @@ def _delete(schema_name, query: dict[str, Any], schemas_path=SCHEMAS_PATH):
     rows_to_delete = _get(schema_name, query=query, schemas_path=schemas_path)
     rows_to_keep = [row for row in all_rows if row not in rows_to_delete]
 
-    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='w', newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=SCHEMAS[schema_name])
+    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='w', newline="",encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=MODELS[schema_name])
         writer.writeheader()
         writer.writerows(rows_to_keep)
 
     _cache.pop(schema_name, None)
+    return rows_to_delete
 
 
 # Update :
@@ -145,8 +159,8 @@ def _update(schema_name, query: dict[str, Any], new_data: dict[str, Any], schema
         else:
             updated_rows.append(row)
 
-    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='w', newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=SCHEMAS[schema_name])
+    with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='w', newline="",encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=MODELS[schema_name])
         writer.writeheader()
         writer.writerows(updated_rows)
 

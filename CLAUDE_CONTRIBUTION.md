@@ -217,3 +217,31 @@ Ajout de `make_db(schema_name, schemas_path)` en bas de `db.py`. Cette factory r
 
 **Description :**
 Correction de 5 bugs qui empêchaient toute exécution des fonctions CRUD : (1) `dict.keys()[0]` ne supporte pas l'indexation en Python 3, remplacé par `list(...)[0]` dans `_create` et `_get_with_primary` ; (2) `_get_with_primary` n'avait pas de paramètre `primary_key_value` et utilisait `primary_key[0]`/`primary_key[1]` (indexation de string au lieu d'accès dict) ; (3) `_delete` et `_update` passaient `None` comme query à `_get` au lieu d'utiliser les keyword args ; (4) `_get_with_query` comparait des valeurs typées avec des strings CSV brutes, corrigé avec `str(value)` ; (5) `_entry_exist` n'acceptait pas `schemas_path`. Refactoring du cache : `_cache.pop(schema_name, None)` sur mutation plutôt que mise à jour sélective. Ajout d'un second étudiant dans le CSV de test. Écriture de 12 tests couvrant GET (all, query, primary key), CREATE (un, plusieurs, doublon ignoré), DELETE (match, no match), UPDATE (match, no match) — tous passent.
+
+---
+
+### 2026-05-31 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Résolution de l'import circulaire entre `cli/__main__.py` et `cli/managers/students.py` + correction de bugs dans `add_student`
+**Prompt utilisateur :** Résoudre l'import circulaire et tester avec `python -m cli` → option "Ajouter un élève".
+
+**Fichiers modifiés :**
+- `cli/__main__.py`
+- `cli/managers/students.py`
+
+**Description :**
+Résolution de l'import circulaire : `students.py` importait `main` depuis `__main__` pour rappeler le menu après une action, et `__main__` importait `students` — boucle fatale. Correction : suppression de l'import circulaire dans `students.py` ; `__main__.main()` boucle désormais avec `while True` (option 8 = Quitter pour sortir). Correction simultanée de deux bugs dans `add_student` : (1) `[{dict(...)}]` créait un set contenant un dict (non hashable → `TypeError`), remplacé par un literal dict ; (2) le champ `id` était absent — ajout d'une génération automatique via `max(s["id"] for s in existing, default=0) + 1`.
+
+---
+
+### 2026-05-31 — Claude Sonnet 4.6 (Anthropic)
+
+**Rôle :** Correction du bug de saut de ligne manquant lors de l'append CSV
+**Prompt utilisateur :** Le CSV ne saute pas de ligne lors de la création : `id,first_name,last_name1,Frédéric,Guiose` — tout sur une seule ligne.
+
+**Fichiers modifiés :**
+- `data/db.py`
+- `data/schemas/students.csv`
+
+**Description :**
+Correction du bug dans `_create` : en mode append (`'a'`), si le fichier ne se termine pas par `\n`, la nouvelle ligne se concatène à la dernière sans séparateur. Ajout d'une vérification avant l'ouverture en append — si le dernier octet du fichier n'est pas `\n`, un saut de ligne est écrit. Restauration du CSV `students.csv` corrompu (header et données fusionnés sur une ligne).

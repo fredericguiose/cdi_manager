@@ -10,8 +10,9 @@ Format attendu :
 ### YYYY-MM-DD — <Nom du modèle> (<Éditeur>)
 
 **Rôle :** <Description courte du rôle dans cette intervention>
-
+**Prompt utilisateur :** <Description courte de ce que l'utilisateur à demander en 1-3 phrases max.>
 **Fichiers créés / modifiés / supprimés :**
+
 - `chemin/fichier`
 
 **Description :**

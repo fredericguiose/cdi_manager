@@ -1,6 +1,6 @@
 
 from typing import Any
-from data.schemas import SCHEMAS
+from data.models import MODELS
 
 
 TYPES_MAP = (int,float,str,bool)
@@ -19,7 +19,7 @@ def clean_data(schema_name:str,data:dict[str,str]) -> dict[str,Any]:
         list[dict[str,Any]]|None: Return the clean data or None
     """
     # Convert the rows to python Data and verify the structure
-    schema_structure = SCHEMAS[schema_name]
+    schema_structure = MODELS[schema_name]
     cleaned = {}
     for key,value in data.items():
         if key not in schema_structure:
