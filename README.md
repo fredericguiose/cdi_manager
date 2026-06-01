@@ -35,7 +35,7 @@ poetry install
 poetry run python -m tests.data
 poetry run python -m tests.cli
 # All tests
-poetry run pytest
+poetry run python -m tests
 ```
 
 ### CLI
@@ -47,5 +47,5 @@ poetry run python -m cli
 ### API + Frontend
 
 ```bash
-poetry run flask --app backend/main.py run
+poetry run flask --app api/main.py run
 ```

@@ -1,5 +1,6 @@
 import csv
 import pathlib
+from turtle import update
 from typing import Any
 from .utils.types import clean_data, match_schema
 from .models import MODELS
@@ -74,7 +75,6 @@ def _create(schema_name:str, entries:list[dict[str,Any]], schemas_path=SCHEMAS_P
         schemas_path: The schemas path folder. Defaults to SCHEMAS_PATH.
     """
     primary_key = list(MODELS[schema_name].keys())[0]
-    error = False
     success_entries = []
     first_id = None
     if MODELS[schema_name][primary_key] == int and not entries[0].get(primary_key):
@@ -98,7 +98,7 @@ def _create(schema_name:str, entries:list[dict[str,Any]], schemas_path=SCHEMAS_P
                 _cache[schema_name][str(entry[primary_key])] = {k: str(v) for k, v in entry.items()}
             success_entries.append(entry)
             counter += 1
-    return success_entries,error
+    return success_entries
 
 
 def _entry_exist(schema_name:str, entry:dict[str,Any], schemas_path=SCHEMAS_PATH) -> bool:
@@ -141,7 +141,7 @@ def _delete(schema_name, query: dict[str, Any], schemas_path=SCHEMAS_PATH) -> li
 
 
 # Update :
-def _update(schema_name, query: dict[str, Any], new_data: dict[str, Any], schemas_path=SCHEMAS_PATH):
+def _update(schema_name, query: dict[str, Any], new_data: dict[str, Any],primary_key_value=None, schemas_path=SCHEMAS_PATH) -> list[dict[str,Any]]:
     """Update records matching the query.
 
     Args:
@@ -152,12 +152,14 @@ def _update(schema_name, query: dict[str, Any], new_data: dict[str, Any], schema
     """
     all_rows = _get(schema_name, schemas_path=schemas_path)
     updated_rows = []
-
+    rows_updated = []
     for row in all_rows:
-        if all(row[k] == v for k, v in query.items()):
+        if all(row[k] == v for k, v in query.items()) or (primary_key_value is not None and row[list(MODELS[schema_name].keys())[0]] == primary_key_value):
             updated_rows.append({**row, **new_data})
+            rows_updated.append({**row, **new_data})
         else:
             updated_rows.append(row)
+
 
     with open(pathlib.Path(schemas_path / f"{schema_name.lower()}.csv"), mode='w', newline="",encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=MODELS[schema_name])
@@ -165,7 +167,7 @@ def _update(schema_name, query: dict[str, Any], new_data: dict[str, Any], schema
         writer.writerows(updated_rows)
 
     _cache.pop(schema_name, None)
-
+    return rows_updated
 
 # Schema Factory :
 
@@ -188,7 +190,7 @@ def make_db(schema_name: str, schemas_path=SCHEMAS_PATH):
     def delete(query: dict[str, Any]):
         return _delete(schema_name, query, schemas_path)
 
-    def update(query: dict[str, Any], new_data: dict[str, Any]):
-        return _update(schema_name, query, new_data, schemas_path)
+    def update(query: dict[str, Any],new_data: dict[str, Any],primary_key_value=None):
+        return _update(schema_name, query or {}, new_data, primary_key_value, schemas_path)
 
     return get, create, delete, update

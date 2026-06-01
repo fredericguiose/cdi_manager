@@ -14,11 +14,14 @@ def add_student():
     """Form : Add a student
     """
     display.title("Ajouter un élève")
+    display.header("Rentrez les informations concernant l'élève :")
     first_name = input("Entrez le prénom de l'élève : ")
     last_name = input("Entrez le nom de l'élève : ")
-
-    entries, error = students_db.create([{"first_name": first_name, "last_name": last_name}])
-    if error or not entries:
+    if not first_name or not last_name:
+        display.error("Le prénom et le nom sont obligatoires.")
+        return
+    entries = students_db.create([{"first_name": first_name, "last_name": last_name}])
+    if not entries:
         display.error("Impossible d'ajouter l'élève.")
     else:
         student = entries[0]
@@ -32,7 +35,6 @@ def delete_student():
     """
     display.title("Supprimer un élève")
     student_to_delete = string_to_type(typ=MODEL[NAME_PRIMARY],value=input("ID de l'élève à supprimer : ")) # Convert the type
-
     if student_to_delete:
         drows = students_db.delete({NAME_PRIMARY:student_to_delete})
     else:
@@ -59,7 +61,18 @@ def verify_student():
         display.error("L'élève n'a pas de livres emprutés ou n'as pas été trouver")
         display.pause()
         return
-    display.table(["id","Prénom","Titre du livre","Rendu"],[[loan[loans_primary_key],students_db.get(primary_key_value=loan["student_id"])[0]["first_name"],books_db.get(primary_key_value=loan["isbn"])[0]["title"],"Oui" if loan["status"] == True else "Non"] for loan in loans])
+    rows = []
+    for loan in loans:
+        students = students_db.get(primary_key_value=loan["student_id"])
+        books = books_db.get(primary_key_value=loan["isbn"])
+        row = [
+            loan[loans_primary_key],
+            students[0]["first_name"] if students else loan["student_id"],
+            books[0]["title"] if books else loan["isbn"],
+            "Oui" if loan["status"] else "Non",
+        ]
+        rows.append(row)
+    display.table(["id", "Prénom", "Titre du livre", "Disponible"], rows)
     display.pause()
 
 

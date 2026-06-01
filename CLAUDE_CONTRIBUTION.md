@@ -245,3 +245,25 @@ Résolution de l'import circulaire : `students.py` importait `main` depuis `__ma
 
 **Description :**
 Correction du bug dans `_create` : en mode append (`'a'`), si le fichier ne se termine pas par `\n`, la nouvelle ligne se concatène à la dernière sans séparateur. Ajout d'une vérification avant l'ouverture en append — si le dernier octet du fichier n'est pas `\n`, un saut de ligne est écrit. Restauration du CSV `students.csv` corrompu (header et données fusionnés sur une ligne).
+
+---
+
+### 2026-05-31 — DeepSeek V4 Pro (DeepSeek)
+
+**Rôle :** Création des tests unitaires du package CLI + corrections de bugs bloquants dans `loans.py`
+**Prompt utilisateur :** Écrire les tests unitaires pour le package `cli` dans `tests.cli`, sans librairie externe ni POO, en suivant la structure existante de `tests.data`.
+
+**Fichiers créés :**
+- `tests/cli/_helpers.py`
+- `tests/cli/test_display.py`
+- `tests/cli/test_books.py`
+- `tests/cli/test_students.py`
+- `tests/cli/test_loans.py`
+- `tests/cli/utils/__init__.py`
+- `tests/cli/utils/__main__.py`
+
+**Fichiers modifiés :**
+- `cli/managers/loans.py`
+
+**Description :**
+Création de 30 tests unitaires couvrant l'ensemble du package CLI : 13 tests pour les fonctions d'affichage (`display.py` — `separator`, `success`, `error`, `info`, `title`, `header`, `table`, `menu`, `pause`), 4 tests pour la gestion des livres (`add_book`, `delete_book`), 6 tests pour la gestion des élèves (`add_student`, `delete_student`, `verify_student`), et 6 tests pour la gestion des emprunts (`add_loan`, `return_loan`). Les tests utilisent du monkey-patching manuel sur `builtins.input` et `sys.stdout` pour simuler les entrées utilisateur et capturer les sorties. Pendant l'écriture des tests, plusieurs bugs ont été découverts et corrigés dans `loans.py` : erreur de syntaxe sur `list(MODELS[...].keys()[0])`, incohérence du nom de champ `book_isbn` vs `isbn`, `len()` appelé sur un `int`, vérification d'existence étudiant/livre déplacée avant l'accès `[0]`, et appels à `update()` sans le paramètre `query` requis.
